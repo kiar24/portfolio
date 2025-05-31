@@ -1,1 +1,6 @@
+For Autoimmune Hepatitis, the following codes were extracted from condition_occurrence (base table in N3C):
+
+SELECT condition_source_value, condition_concept_id, person_id
+FROM condition_occurrence
+WHERE condition_concept_id IN (200762, 1417601, 1417602, 3571434, 42489928, 45426906, 45601188, 3286386, 36687200, 35208356, 37162862, 36715923, 36715924, 36717496, 44837177, 3215830, 3310136, 3325470, 1423222, 37162859, 1417572, 37164403, 4026125)
 
