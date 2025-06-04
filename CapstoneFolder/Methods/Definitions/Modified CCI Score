@@ -1,0 +1,134 @@
+-- Step 1: Define CCI_Conditions CTE to identify relevant conditions and assign weights
+WITH CCI_Conditions AS (
+    SELECT DISTINCT
+        person_id,                              -- Select the person_id column
+        age_group,
+        condition_start_date,                   -- Select the condition_start_date column
+        concept_set_name AS condition_name,     -- Name of the condition (e.g., Charlson - MI)
+        condition_concept_id,                   -- Concept ID of the condition
+        concept_set_name,                       -- Concept set name (e.g., 'Charlson - MI')
+        -- Assign weights based on provided concept set names
+        CASE                                         
+            WHEN concept_set_name = 'Charlson - MI' THEN 1
+            WHEN concept_set_name = 'Charlson - CHF' THEN 1
+            WHEN concept_set_name = 'Charlson - PVD' THEN 1
+            WHEN concept_set_name = 'Charlson - Stroke' THEN 1
+            WHEN concept_set_name = 'Charlson - Dementia' THEN 1
+            WHEN concept_set_name = 'Charlson - Pulmonary' THEN 1
+            WHEN concept_set_name = 'Charlson - Rheumatic' THEN 1
+            WHEN concept_set_name = 'Charlson - PUD' THEN 1
+            WHEN concept_set_name = 'Charlson - LiverMild' THEN 1
+            WHEN concept_set_name = 'Charlson - LiverSevere' THEN 3
+            WHEN concept_set_name = 'Charlson - DMcx' THEN 2
+            WHEN concept_set_name = 'Charlson - DM' THEN
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM CCITake2_MELD AS CCI_DM
+                        WHERE CCI_DM.person_id = person_id
+                        AND CCI_DM.concept_set_name = 'Charlson - DMcx'
+                    ) THEN 0
+                    ELSE 1
+                END
+            WHEN concept_set_name = 'Charlson - Paralysis' THEN 2
+            WHEN concept_set_name = 'Charlson - Renal' THEN 2
+            WHEN concept_set_name = 'Charlson - Cancer' THEN 2
+            WHEN concept_set_name = 'Charlson - Mets' THEN 6
+            WHEN concept_set_name = 'Charlson - Leukemia' THEN 2
+            WHEN concept_set_name = 'Charlson - Lymphoma' THEN 2
+            WHEN concept_set_name = 'Charlson - HIV' THEN 6
+            ELSE 0
+        END AS condition_weight                    
+    FROM CCITake2_MELD
+    WHERE person_id NOT IN (
+        SELECT person_id
+        FROM CCITake2_MELD AS Excluded
+        WHERE Excluded.concept_set_name = 'Charlson - LiverMild'
+    )
+),
+
+-- Step 2: Aggregate Condition Weights for Each Person
+Aggregated_Condition_Weights AS (
+    SELECT
+        person_id,
+        MAX(CASE WHEN condition_name = 'Charlson - MI' THEN condition_weight ELSE 0 END) AS Myocardial_Infarction,
+        MAX(CASE WHEN condition_name = 'Charlson - CHF' THEN condition_weight ELSE 0 END) AS Congestive_Heart_Failure,
+        MAX(CASE WHEN condition_name = 'Charlson - PVD' THEN condition_weight ELSE 0 END) AS Peripheral_Vascular_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - Stroke' THEN condition_weight ELSE 0 END) AS Cerebrovascular_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - Dementia' THEN condition_weight ELSE 0 END) AS Dementia,
+        MAX(CASE WHEN condition_name = 'Charlson - Pulmonary' THEN condition_weight ELSE 0 END) AS Chronic_Pulmonary_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - Rheumatic' THEN condition_weight ELSE 0 END) AS Rheumatologic_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - PUD' THEN condition_weight ELSE 0 END) AS Peptic_Ulcer_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - LiverSevere' THEN condition_weight ELSE 0 END) AS Severe_Liver_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - DM' THEN condition_weight ELSE 0 END) AS Diabetes_Mellitus_Controlled,
+        MAX(CASE WHEN condition_name = 'Charlson - DMcx' THEN condition_weight ELSE 0 END) AS Diabetes_Mellitus_Uncontrolled,
+        MAX(CASE WHEN condition_name = 'Charlson - Paralysis' THEN condition_weight ELSE 0 END) AS Hemiplegia_or_Paraplegia,
+        MAX(CASE WHEN condition_name = 'Charlson - Renal' THEN condition_weight ELSE 0 END) AS Renal_Disease,
+        MAX(CASE WHEN condition_name = 'Charlson - Cancer' THEN condition_weight ELSE 0 END) AS Malignancy_Localized,
+        MAX(CASE WHEN condition_name = 'Charlson - Mets' THEN condition_weight ELSE 0 END) AS Malignancy_Metastatic,
+        MAX(CASE WHEN condition_name = 'Charlson - Leukemia' THEN condition_weight ELSE 0 END) AS Leukemia,
+        MAX(CASE WHEN condition_name = 'Charlson - Lymphoma' THEN condition_weight ELSE 0 END) AS Lymphoma,
+        MAX(CASE WHEN condition_name = 'Charlson - HIV' THEN condition_weight ELSE 0 END) AS AIDS,
+        age_group
+    FROM CCI_Conditions
+    GROUP BY person_id, age_group
+),
+
+-- Step 3: Calculate CCI Scores
+CCI_Scores AS (
+    SELECT 
+        person_id,
+        -- Age-related score calculation (using the specified age groups)
+        CASE
+            WHEN age_group = '<18' THEN 0
+            WHEN age_group = '18-29' THEN 0
+            WHEN age_group = '30-39' THEN 0
+            WHEN age_group = '40-49' THEN 0
+            WHEN age_group = '50-59' THEN 1
+            WHEN age_group = '60-69' THEN 2
+            WHEN age_group = '70-79' THEN 3
+            WHEN age_group = '80+' THEN 4
+            ELSE 0
+        END AS Age_Score,
+
+        Myocardial_Infarction + Congestive_Heart_Failure + Peripheral_Vascular_Disease + 
+        Cerebrovascular_Disease + Dementia + Chronic_Pulmonary_Disease + Rheumatologic_Disease + 
+        Peptic_Ulcer_Disease + Diabetes_Mellitus_Controlled + Diabetes_Mellitus_Uncontrolled + 
+        Hemiplegia_or_Paraplegia + Renal_Disease + Malignancy_Localized + Malignancy_Metastatic + 
+        Leukemia + Lymphoma + AIDS + 
+        Age_Score AS CCI_Score_Final
+    FROM Aggregated_Condition_Weights
+)
+
+-- Step 4: Select final output
+SELECT 
+    CCI_Scores.person_id,                           -- Person ID
+    CCI_Scores.CCI_Score_Final,                           -- Total CCI Score (including age and gender)
+    Aggregated_Condition_Weights.Myocardial_Infarction AS MI_Present_New,  
+    Aggregated_Condition_Weights.Congestive_Heart_Failure AS CHF_Present_New, 
+    Aggregated_Condition_Weights.Peripheral_Vascular_Disease AS PVD_Present_New, 
+    Aggregated_Condition_Weights.Cerebrovascular_Disease AS Cerebrovascular_Present_New, 
+    Aggregated_Condition_Weights.Dementia AS Dementia_Present_New,               
+    Aggregated_Condition_Weights.Chronic_Pulmonary_Disease AS CPD_Present_New, 
+    Aggregated_Condition_Weights.Rheumatologic_Disease AS Rheumatologic_Present_New,    
+    Aggregated_Condition_Weights.Peptic_Ulcer_Disease AS PUD_Present_New,    
+    Aggregated_Condition_Weights.Severe_Liver_Disease AS Severe_Liver_Present_New,    
+    Aggregated_Condition_Weights.Diabetes_Mellitus_Controlled AS Diabetes_Mellitus_Controlled_Present_New, 
+    Aggregated_Condition_Weights.Diabetes_Mellitus_Uncontrolled AS Diabetes_Mellitus_Uncontrolled_Present_New, 
+    Aggregated_Condition_Weights.Hemiplegia_or_Paraplegia AS Hemiplegia_or_Paraplegia_Present_New, 
+    Aggregated_Condition_Weights.Renal_Disease AS Renal_Present_New,           
+    Aggregated_Condition_Weights.Malignancy_Localized AS Malignancy_Localized_Present_New,    
+    Aggregated_Condition_Weights.Malignancy_Metastatic AS Malignancy_Metastatic_Present_New,   
+    Aggregated_Condition_Weights.Leukemia AS Leukemia_Present_New,                
+    Aggregated_Condition_Weights.Lymphoma AS Lymphoma_Present_New,                
+    Aggregated_Condition_Weights.AIDS AS AIDS_Present_New,                    
+    CCI_Scores.Age_Score AS Age_Score_Present_New,   -- Age-related score
+    CASE 
+        WHEN Aggregated_Condition_Weights.Diabetes_Mellitus_Controlled > 0 
+          OR Aggregated_Condition_Weights.Diabetes_Mellitus_Uncontrolled > 0 
+        THEN 1 
+        ELSE 0 
+    END AS Diabetes_Present_New
+FROM CCI_Scores
+JOIN Aggregated_Condition_Weights
+    ON CCI_Scores.person_id = Aggregated_Condition_Weights.person_id
