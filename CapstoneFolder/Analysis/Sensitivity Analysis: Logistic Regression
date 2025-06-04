@@ -1,1 +1,15 @@
+MELDONLYAdjustedModel_Take2 <- function(Meldonlyadjustedmodel_Take2) {
+     # Fit the logistic regression model
+    basemodel <- glm(covid_diagnosis ~ PrednisoneUse_Cleaned + AzathioprineUse_Cleaned + BudesonideUse_Cleaned + TacrolimusUse_Cleaned + CellceptUse_Cleaned + CyclosporineUse_Cleaned + age_group + sex + race + region + Cirrhosis_Status + Ascites_New + Pleural_Effusion_New + BudesonideUse_Cleaned*AzathioprineUse_Cleaned + AzathioprineUse_Cleaned*PrednisoneUse_Cleaned + PrednisoneUse_Cleaned*BudesonideUse_Cleaned + BudesonideUse_Cleaned*CellceptUse_Cleaned + PrednisoneUse_Cleaned*CellceptUse_Cleaned + BudesonideUse_Cleaned* TacrolimusUse_Cleaned + PrednisoneUse_Cleaned*TacrolimusUse_Cleaned, data = Meldonlyadjustedmodel_Take2, family = binomial)
 
+    # Display the model summary
+    print(summary(basemodel))
+    # Exponentiate the coefficients to get odds ratios
+    odds_ratios <- exp(coef(basemodel))
+    print("Odds Ratios:")
+    print(odds_ratios)
+    print(confint(basemodel))
+    print("Exponentiated CI:")
+    print(exp(confint(basemodel)))
+return(Meldonlyadjustedmodel_Take2)
+}
