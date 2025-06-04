@@ -1,0 +1,31 @@
+SELECT 
+    measurement.person_id, 
+    measurement.data_partner_id, 
+    measurement.measurement_date AS CovidTest_Date,  -- Renamed to `test_date` to combine both
+    measurement_concept_id, 
+    value_as_concept_id,
+    CASE 
+        WHEN measurement.value_as_concept_id IN (4126681, 45877985, 45884084, 9191) THEN 1  -- Positive test results (Detected, positive)
+        WHEN measurement.value_as_concept_id IN (45878583, 45880296, 9189, 9190) THEN 0  -- Negative test results (Detected, negative)
+        ELSE NULL  -- If the test result does not match any of the conditions, it will return NULL
+    END AS covid_diagnosis
+FROM measurement
+WHERE 
+    measurement.measurement_concept_id IN (
+        586516, 586517, 586518, 586519, 586520, 586523, 586526, 
+        706154, 706155, 706156, 706157, 706158, 706159, 706160, 
+        706161, 706163, 706165, 706166, 706167, 706168, 706169, 
+        706170, 706171, 706172, 706173, 706174, 706175, 
+        715260, 715261, 715262, 757677, 757678) 
+    AND measurement.value_as_concept_id IN (
+        4126681, 45877985, 45884084, 9191, 45878583, 45880296, 9189, 9190)
+
+
+--SELECT measurement.person_id, measurement.data_partner_id, measurement.measurement_date as covidtest_date, measurement_concept_id, value_as_concept_id,
+--CASE WHEN measurement.person_id IS NOT NULL THEN 1 ELSE 1 END as covid_diagnosis
+--FROM measurement
+--WHERE measurement.measurement_concept_id In (586516, 586517, 586518, 586519, 586520, 586523, 586526, 706154, 706155, 706156, 706157, 706158, 706159, 706160, 706161, 706163, 706165, 706166, 706167, 706168, 706169, 706170, 706171, 706172, 706173, 706174, 706175, 715260, 715261, 715262, 757677, 757678) AND measurement.value_as_concept_id IN (4126681, 45877985, 45884084, 9191)
+
+--Selects specific columns: person_id, data_partner_id, and measurement_date (aliased as date).
+--Creates a new column: covid_diagnosis, which is always set to 1 if person_id is not null.
+--Filters the data: Only includes rows where measurement_concept_id is in a specified list and value_as_concept_id is in another specified list. Specifically for COVID codes (culture and nucleic acid amplification.
