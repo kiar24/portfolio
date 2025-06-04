@@ -1,1 +1,40 @@
+AdjustedSurvModelMELDONLYSameLR <- function(Analysisdeathmeldonly_take2) {
+     # Load necessary libraries
+  #install.packages("survminer")
 
+  library(survival)
+  library(ggplot2)
+  #library(survminer)
+  # Generate sample data
+  
+  # Convert SparkDataFrame to data.frame
+  #Analysis_Death_df <- collect(AnalysisDeath_UpdatedData)
+  
+  # Fit the Cox Proportional Hazard model with stratification
+  fit.cox.def <- coxph(Surv(Days_till_Death, Death_Occurrence) ~ 
+                         PrednisoneUse_Cleaned + 
+                         AzathioprineUse_Cleaned + 
+                         BudesonideUse_Cleaned + 
+                         TacrolimusUse_Cleaned + 
+                         CellceptUse_Cleaned + 
+                         CyclosporineUse_Cleaned + age_group + sex + race + region + Cirrhosis_Status + Ascites_New + Pleural_Effusion_New + BudesonideUse_Cleaned*AzathioprineUse_Cleaned + AzathioprineUse_Cleaned*PrednisoneUse_Cleaned + PrednisoneUse_Cleaned*BudesonideUse_Cleaned + BudesonideUse_Cleaned*CellceptUse_Cleaned + PrednisoneUse_Cleaned*CellceptUse_Cleaned + BudesonideUse_Cleaned* TacrolimusUse_Cleaned + PrednisoneUse_Cleaned*TacrolimusUse_Cleaned,  
+                       data = Analysisdeathmeldonly_take2)
+  
+  # Display the summary of the model
+  print(summary(fit.cox.def))
+  ph_test <- cox.zph(fit.cox.def)
+
+  # Print results
+  print(ph_test)
+
+  # Plot residuals
+  plot(ph_test)
+  
+  # Generate the survival fit object based on the Cox model
+  #km_fit <- survfit(fit.cox.def)  # This generates the survival curves based on the Cox model
+  
+  #plot(km_fit, xlab = "Time", ylab = "Survival Probability", main = "Kaplan-Meier Curve")
+  
+  # Return the fit model for further use
+return(Analysisdeathmeldonly_take2)
+}
