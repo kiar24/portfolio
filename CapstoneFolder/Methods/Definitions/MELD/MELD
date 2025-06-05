@@ -1,1 +1,368 @@
+WITH RankedMeasurements AS (
+    SELECT *
+    FROM (
+        SELECT 
+            j.person_id,
+            j.CovidTest_Date,
+            m.measurement_concept_id,
+            m.value_as_number,
+            m.measurement_date,
+            m.unit_concept_name,
+            m.unit_source_value,
+            ROW_NUMBER() OVER (
+                PARTITION BY j.person_id, m.measurement_concept_id
+                ORDER BY ABS(DATEDIFF(m.measurement_date, j.CovidTest_Date)) ASC
+            ) AS rn
+        FROM JoinLabTests_ISCount j
+        LEFT JOIN Measurement_AIH m ON m.person_id = j.person_id
+        WHERE 
+            m.measurement_date BETWEEN DATEADD(YEAR, -1, j.CovidTest_Date) AND DATEADD(YEAR, 1, j.CovidTest_Date)
+    ) ranked
+    WHERE rn = 1
+),
 
+-- Sodium
+Sodium AS (
+    SELECT 
+        person_id,
+        measurement_date AS Sodium_Date,
+        value_as_number AS Sodium_Value,
+        unit_concept_name AS Sodium_UnitName,
+        unit_source_value AS Sodium_UnitSource,
+        measurement_concept_id AS Sodium_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (46235784, 3041473, 3038702, 3031579, 3019550, 3000285)
+),
+
+-- Creatinine
+Creatinine AS (
+    SELECT 
+        person_id,
+        measurement_date AS Creatinine_Date,
+        value_as_number AS Creatinine_Value,
+        unit_concept_name AS Creatinine_UnitName,
+        unit_source_value AS Creatinine_UnitSource,
+        measurement_concept_id AS Creatinine_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3007760, 3016723)
+),
+
+-- Albumin
+Albumin AS (
+    SELECT 
+        person_id,
+        measurement_date AS Albumin_Date,
+        value_as_number AS Albumin_Value,
+        unit_concept_name AS Albumin_UnitName,
+        unit_source_value AS Albumin_UnitSource,
+        measurement_concept_id AS Albumin_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (40763912, 40763913, 3028286, 46235170)
+),
+
+-- Bilirubin
+Bilirubin AS (
+    SELECT 
+        person_id,
+        measurement_date AS Bilirubin_Date,
+        value_as_number AS Bilirubin_Value,
+        unit_concept_name AS Bilirubin_UnitName,
+        unit_source_value AS Bilirubin_UnitSource,
+        measurement_concept_id AS Bilirubin_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (40762888, 3019676, 3027597, 3028833, 3007359, 40762889, 3024128)
+),
+
+-- INR
+INR AS (
+    SELECT 
+        person_id,
+        measurement_date AS INR_Date,
+        value_as_number AS INR_Value,
+        unit_concept_name AS INR_UnitName,
+        unit_source_value AS INR_UnitSource,
+        measurement_concept_id AS INR_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3022217, 3039326, 3051593, 3042605)
+),
+
+-- ALT
+ALT AS (
+    SELECT 
+        person_id,
+        measurement_date AS ALT_Date,
+        value_as_number AS ALT_Value,
+        unit_concept_name AS ALT_UnitName,
+        unit_source_value AS ALT_UnitSource,
+        measurement_concept_id AS ALT_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3027388, 3006923, 46235106, 3005755)
+),
+
+-- AST
+AST AS (
+    SELECT 
+        person_id,
+        measurement_date AS AST_Date,
+        value_as_number AS AST_Value,
+        unit_concept_name AS AST_UnitName,
+        unit_source_value AS AST_UnitSource,
+        measurement_concept_id AS AST_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3037081, 3013721)
+),
+
+-- Platelets
+Platelets AS (
+    SELECT 
+        person_id,
+        measurement_date AS Platelets_Date,
+        value_as_number AS Platelets_Value,
+        unit_concept_name AS Platelets_UnitName,
+        unit_source_value AS Platelets_UnitSource,
+        measurement_concept_id AS Platelets_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3010834, 3016682, 3007461, 3031586, 3024929)
+),
+
+-- WBC
+WBC AS (
+    SELECT 
+        person_id,
+        measurement_date AS WBC_Date,
+        value_as_number AS WBC_Value,
+        unit_concept_name AS WBC_UnitName,
+        unit_source_value AS WBC_UnitSource,
+        measurement_concept_id AS WBC_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (4298431, 3094961, 3110776, 40301779, 40332442, 45531601, 3452745, 3458428, 
+        37208925, 3552545, 3552564, 3094968, 40301788, 45526643, 45526644, 
+        4013538, 4013991, 1567869, 3414242, 3437165, 1567868, 44836949, 
+        44836950, 44826486, 44828822, 45537933, 45542715, 45566711, 
+        45576413, 4024539, 4022146, 2212656, 4013251, 37174354, 
+        37160897, 4014488, 4016930, 4016931, 4016236, 4212899, 
+        37393855, 37174416, 37174417, 37393316)
+),
+
+-- Neutrophils
+Neutrophils AS (
+    SELECT 
+        person_id,
+        measurement_date AS Neutrophil_Date,
+        value_as_number AS Neutrophil_Value,
+        unit_concept_name AS Neutrophil_UnitName,
+        unit_source_value AS Neutrophil_UnitSource,
+        measurement_concept_id AS Neutrophil_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3017501, 3018010, 3027368, 3013650, 3008342, 3017732)
+),
+
+-- Hemoglobin
+Hemoglobin AS (
+    SELECT 
+        person_id,
+        measurement_date AS Hemoglobin_Date,
+        value_as_number AS Hemoglobin_Value,
+        unit_concept_name AS Hemoglobin_UnitName,
+        unit_source_value AS Hemoglobin_UnitSource,
+        measurement_concept_id AS Hemoglobin_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3004119, 3007302, 40758903, 3000963, 3006184, 3002173)
+),
+
+-- Weight
+Weight AS (
+    SELECT 
+        person_id,
+        measurement_date AS Weight_Date,
+        value_as_number AS Weight_Value,
+        unit_concept_name AS Weight_UnitName,
+        unit_source_value AS Weight_UnitSource,
+        measurement_concept_id AS Weight_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (40452545, 1029318, 3188642, 1003901, 1036720, 45876171, 3325484, 3139277, 3013762, 4099154, 3025315)
+),
+
+-- Height
+Height AS (
+    SELECT 
+        person_id,
+        measurement_date AS Height_Date,
+        value_as_number AS Height_Value,
+        unit_concept_name AS Height_UnitName,
+        unit_source_value AS Height_UnitSource,
+        measurement_concept_id AS Height_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (1003912, 1003116, 1003850, 1003232, 3019171, 3023540, 4177340, 1002881, 45876161, 3036277)
+),
+
+-- BMI
+BMI AS (
+    SELECT 
+        person_id,
+        measurement_date AS BMI_Date,
+        value_as_number AS BMI_Value,
+        unit_concept_name AS BMI_UnitName,
+        unit_source_value AS BMI_UnitSource,
+        measurement_concept_id AS BMI_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (40540383, 40329230, 40298249, 4245997, 3150715, 3092192, 1036718, 1027485)
+),
+
+-- ALP
+ALP AS (
+    SELECT 
+        person_id,
+        measurement_date AS ALP_Date,
+        value_as_number AS ALP_Value,
+        unit_concept_name AS ALP_UnitName,
+        unit_source_value AS ALP_UnitSource,
+        measurement_concept_id AS ALP_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3035995, 3001110, 3036513, 46235077)
+),
+
+-- IgG
+IgG AS (
+    SELECT 
+        person_id,
+        measurement_date AS IgG_Date,
+        value_as_number AS IgG_Value,
+        unit_concept_name AS IgG_UnitName,
+        unit_source_value AS IgG_UnitSource,
+        measurement_concept_id AS IgG_ConceptID
+    FROM RankedMeasurements
+    WHERE rn = 1
+      AND measurement_concept_id IN (3008143, 3047387, 3008613, 3005719, 40759043)
+)
+
+-- Final SELECT to combine lab values
+SELECT 
+    j.person_id,
+    j.CovidTest_Date,
+    s.Sodium_Value,
+    s.Sodium_UnitName,
+    s.Sodium_UnitSource,
+    s.Sodium_ConceptID,
+    s.Sodium_Date,
+    c.Creatinine_Value,
+    c.Creatinine_UnitName,
+    c.Creatinine_UnitSource,
+    c.Creatinine_ConceptID,
+    c.Creatinine_Date,
+    a.Albumin_Value,
+    a.Albumin_UnitName,
+    a.Albumin_UnitSource,
+    a.Albumin_ConceptID,
+    a.Albumin_Date,
+
+    b.Bilirubin_Value,
+    b.Bilirubin_UnitName,
+    b.Bilirubin_UnitSource,
+    b.Bilirubin_ConceptID,
+    b.Bilirubin_Date,
+
+    i.INR_Value,
+    i.INR_UnitName,
+    i.INR_UnitSource,
+    i.INR_ConceptID,
+    i.INR_Date,
+
+    alt.ALT_Value,
+    alt.ALT_UnitName,
+    alt.ALT_UnitSource,
+    alt.ALT_ConceptID,
+    alt.ALT_Date,
+
+    ast.AST_Value,
+    ast.AST_UnitName,
+    ast.AST_UnitSource,
+    ast.AST_ConceptID,
+    ast.AST_Date,
+
+    p.Platelets_Value,
+    p.Platelets_UnitName,
+    p.Platelets_UnitSource,
+    p.Platelets_ConceptID,
+    p.Platelets_Date,
+
+    w.WBC_Value,
+    w.WBC_UnitName,
+    w.WBC_UnitSource,
+    w.WBC_ConceptID,
+    w.WBC_Date,
+
+    n.Neutrophil_Value,
+    n.Neutrophil_UnitName,
+    n.Neutrophil_UnitSource,
+    n.Neutrophil_ConceptID,
+    n.Neutrophil_Date,
+
+    h.Hemoglobin_Value,
+    h.Hemoglobin_UnitName,
+    h.Hemoglobin_UnitSource,
+    h.Hemoglobin_ConceptID,
+    h.Hemoglobin_Date,
+
+    wt.Weight_Value,
+    wt.Weight_UnitName,
+    wt.Weight_UnitSource,
+    wt.Weight_ConceptID,
+    wt.Weight_Date,
+
+    ht.Height_Value,
+    ht.Height_UnitName,
+    ht.Height_UnitSource,
+    ht.Height_ConceptID,
+    ht.Height_Date,
+
+    bmi.BMI_Value,
+    bmi.BMI_UnitName,
+    bmi.BMI_UnitSource,
+    bmi.BMI_ConceptID,
+    bmi.BMI_Date,
+
+    alp.ALP_Value,
+    alp.ALP_UnitName,
+    alp.ALP_UnitSource,
+    alp.ALP_ConceptID,
+    alp.ALP_Date,
+
+    igg.IgG_Value,
+    igg.IgG_UnitName,
+    igg.IgG_UnitSource,
+    igg.IgG_ConceptID,
+    igg.IgG_Date
+    
+FROM JoinLabTests_ISCount j
+LEFT JOIN Sodium s ON j.person_id = s.person_id
+LEFT JOIN Creatinine c ON j.person_id = c.person_id
+LEFT JOIN Albumin a ON j.person_id = a.person_id
+LEFT JOIN Bilirubin b ON j.person_id = b.person_id
+LEFT JOIN INR i ON j.person_id = i.person_id
+LEFT JOIN ALT alt ON j.person_id = alt.person_id
+LEFT JOIN AST ast ON j.person_id = ast.person_id
+LEFT JOIN Platelets p ON j.person_id = p.person_id
+LEFT JOIN WBC w ON j.person_id = w.person_id
+LEFT JOIN Neutrophils n ON j.person_id = n.person_id
+LEFT JOIN Hemoglobin h ON j.person_id = h.person_id
+LEFT JOIN Weight wt ON j.person_id = wt.person_id
+LEFT JOIN Height ht ON j.person_id = ht.person_id
+LEFT JOIN BMI bmi ON j.person_id = bmi.person_id
+LEFT JOIN ALP alp ON j.person_id = alp.person_id
+LEFT JOIN IgG igg ON j.person_id = igg.person_id
