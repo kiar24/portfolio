@@ -7,7 +7,7 @@ The title of my project is 'Assessing the Relationship Between Immunosuppressant
 The objective of my project is to address the following research questions:
 In patients diagnosed with AIH, does the type of immunosuppressive therapy influence the risk of acquiring SARS-CoV-2 infection and the clinical outcomes among those infected?
 
-My thanks to my Capstone Committee: Jin Ge, Karla Lindquist, and John Kornak.
+My thanks to my Capstone Committee: Dr. Jin Ge, Dr. Karla Lindquist, and Dr. John Kornak.
 
 All missing data on these pages either have results or text that needs to be approved. Upon approval, I will include it onto this page.
 
